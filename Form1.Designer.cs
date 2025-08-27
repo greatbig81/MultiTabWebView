@@ -123,33 +123,7 @@
             clearAllButton.Click += ClearAllButton_Click;
             userControlPanel.Controls.Add(clearAllButton);
 
-            // 뷰 타입 선택 그룹박스
-            viewTypeGroupBox = new GroupBox
-            {
-                Text = "뷰 타입",
-                Location = new Point(520, 5),
-                Size = new Size(150, 35)
-            };
-            userControlPanel.Controls.Add(viewTypeGroupBox);
-
-            singleViewRadioButton = new RadioButton
-            {
-                Text = "싱글뷰",
-                Location = new Point(10, 15),
-                Size = new Size(65, 15),
-                Checked = true
-            };
-            singleViewRadioButton.CheckedChanged += ViewTypeRadioButton_CheckedChanged;
-            viewTypeGroupBox.Controls.Add(singleViewRadioButton);
-
-            doubleViewRadioButton = new RadioButton
-            {
-                Text = "더블뷰",
-                Location = new Point(80, 15),
-                Size = new Size(65, 15)
-            };
-            doubleViewRadioButton.CheckedChanged += ViewTypeRadioButton_CheckedChanged;
-            viewTypeGroupBox.Controls.Add(doubleViewRadioButton);
+            
         }
 
         private void InitializeTabControl()

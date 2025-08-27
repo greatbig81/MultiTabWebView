@@ -18,8 +18,6 @@ namespace MultiTabWebView
         private TabControl tabControl;
         private Panel webViewContainer;
         private GroupBox viewTypeGroupBox;
-        private RadioButton singleViewRadioButton;
-        private RadioButton doubleViewRadioButton;
 
         private TextBox startIpTextBox;
         private NumericUpDown countNumericUpDown;
@@ -27,8 +25,7 @@ namespace MultiTabWebView
         private Button clearAllButton;
 
         private Dictionary<TabPage, List<WebView2>> tabWebViewMap;
-        private ViewType currentViewType = ViewType.Single;
-
+        
         public enum ViewType
         {
             Single,
@@ -52,7 +49,7 @@ namespace MultiTabWebView
 
                 if (!IsValidIpAddress(startIp))
                 {
-                    MessageBox.Show("유효한 IP 주소를 입력해주세요.1", "오류",
+                    MessageBox.Show("유효한 IP 주소를 입력해주세요.", "오류",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
@@ -182,99 +179,6 @@ namespace MultiTabWebView
 
                 webView.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
 
-                /*
-                webView.CoreWebView2.DOMContentLoaded += async (sender, e) =>
-                {
-                    try
-                    {
-                        // DOM이 로드된 후 실행할 JavaScript 코드
-                        string script = $@"
-                            console.log('DOMContentLoaded fired for {ip} (View {index + 1})');
-                            // 페이지에 정보 표시
-                            if (document.body) 
-                            {{
-                                var info = document.createElement('div');
-                                info.style.position = 'fixed';
-                                info.style.top = '10px';
-                                info.style.left = '10px';
-                                info.style.background = 'rgba(0,0,0,0.7)';
-                                info.style.color = 'white';
-                                info.style.padding = '10px';
-                                info.style.borderRadius = '5px';
-                                info.style.zIndex = '9999';
-                                info.innerHTML = 'IP: {ip}<br>View: {index + 1}<br>Time: ' + new Date().toLocaleTimeString();
-                                document.body.appendChild(info);
-                                
-                                // 3초 후 자동 제거
-                                setTimeout(function() {{
-                                    if (info.parentNode) {{
-                                        info.parentNode.removeChild(info);
-                                    }}
-                                }}, 3000);
-                            }}
-                        ";
-
-                        // 싱글뷰 로그인
-                        string script2 = @"
-                            const userNameInput = document.querySelector('input[formcontrolname=""userName""]');
-                            if (userNameInput) {
-                                userNameInput.value = 'admin';
-                            }
-                            const passwordInput = document.querySelector('input[formcontrolname=""password""]');
-                            if (passwordInput) {
-                                passwordInput.value = 'admin';
-
-                                passwordInput.dispatchEvent(new Event('input', {
-                                bubbles: true
-                                }));
-                            }
-
-                            if(userNameInput && passwordInput)
-                            {
-                                const signInButton = document.querySelector('.form-actions.right .blue-btn');
-                                if (signInButton) {
-                                    signInButton.click();
-                                }
-                            }
-                        ";
-
-                        // 더블뷰
-                        string script3 = @"
-                            const userNameInput2 = document.getElementsByName('luci_username')[0];
-                            if (userNameInput2) {
-                                userNameInput2.value = 'root';
-                            }
-                            const passwordInput2 = document.getElementsByName('luci_password')[0];
-                            if (passwordInput2) {
-                                passwordInput2.value = 'root';
-
-                                passwordInput2.dispatchEvent(new Event('input', {
-                                bubbles: true
-                                }));
-                            }
-                            if(userNameInput2 && passwordInput2)
-                            {
-                                const loginButton = document.querySelector('input[type=""submit""][value=""Login""]');
-                                if (loginButton) {
-                                    loginButton.click();
-                                }
-                            }
-                        ";
-
-                        if(currentViewType == ViewType.Single)
-                            script += script2;
-                        else
-                            script += script3;
-
-                        await webView.CoreWebView2.ExecuteScriptAsync(script);
-                    }
-                    catch (Exception ex)
-                    {
-                        // 에러 로깅 (필요시)
-                        System.Diagnostics.Debug.WriteLine($"DOMContentLoaded 핸들러 오류: {ex.Message}");
-                    }
-                };
-                */
 
                 // 초기 페이지 로드 (IP 기반 URL로 이동)
                 string url = $"http://{ip}:4011";
@@ -501,15 +405,7 @@ namespace MultiTabWebView
 
         private void ViewTypeRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            if (sender == singleViewRadioButton && singleViewRadioButton.Checked)
-            {
-                currentViewType = ViewType.Single;
-            }
-            else if (sender == doubleViewRadioButton && doubleViewRadioButton.Checked)
-            {
-                currentViewType = ViewType.Double;
-            }
-
+            
             // 기존 탭들의 WebView 레이아웃 재구성
             //await ReconfigureExistingTabs();
         }
@@ -545,7 +441,7 @@ namespace MultiTabWebView
         {
             if (tabControl.TabPages.Count == 0) return;
 
-            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?1232111fdafdsafds", "확인",
+            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?", "확인",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
