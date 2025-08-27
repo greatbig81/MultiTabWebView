@@ -545,7 +545,7 @@ namespace MultiTabWebView
         {
             if (tabControl.TabPages.Count == 0) return;
 
-            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?1232111", "확인",
+            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?1232111fdafdsafds", "확인",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
