@@ -52,7 +52,7 @@ namespace MultiTabWebView
 
                 if (!IsValidIpAddress(startIp))
                 {
-                    MessageBox.Show("유효한 IP 주소를 입력해주세요.", "오류",
+                    MessageBox.Show("유효한 IP 주소를 입력해주세요.1", "오류",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
@@ -545,7 +545,7 @@ namespace MultiTabWebView
         {
             if (tabControl.TabPages.Count == 0) return;
 
-            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?", "확인",
+            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?1232111", "확인",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
