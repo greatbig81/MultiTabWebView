@@ -2,13 +2,14 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Diagnostics;
 
 namespace MultiTabWebView
 {
@@ -25,7 +26,13 @@ namespace MultiTabWebView
         private Button clearAllButton;
 
         private Dictionary<TabPage, List<WebView2>> tabWebViewMap;
-        
+
+        private System.Windows.Forms.Timer genTimer;
+
+        private string _startIp = "";
+        private int _genCount = 0;
+        private int _genIndex = 0;
+
         public enum ViewType
         {
             Single,
@@ -36,6 +43,43 @@ namespace MultiTabWebView
         {
             InitializeComponent();
             tabWebViewMap = new Dictionary<TabPage, List<WebView2>>();
+
+            // 5초마다 실행되는 타이머 생성 및 시작
+            genTimer = new System.Windows.Forms.Timer();
+            genTimer.Interval = 500; // 2초 (5000ms)
+            genTimer.Tick += OnTimerTick;
+            
+        }
+
+        // 타이머 Tick 이벤트 핸들러 함수
+        private async void OnTimerTick(object sender, EventArgs e)
+        {
+            if (!IsValidIpAddress(_startIp)) return;
+            if (_genIndex >= _genCount)
+            {
+                genTimer.Stop();
+                return;
+            }
+
+            genTimer.Interval = 1500;
+
+            var baseIp = IPAddress.Parse(_startIp);
+            var ipBytes = baseIp.GetAddressBytes();
+
+            // 마지막 옥텟 증가
+            int newLastOctet = ipBytes[3] + _genIndex;
+            if (newLastOctet > 255)
+            {
+                genTimer.Stop();
+                MessageBox.Show("IP 주소 범위를 초과했습니다.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            ipBytes[3] = (byte)newLastOctet;
+            var currentIp = new IPAddress(ipBytes).ToString();
+
+            await GenerateTabsAndWebViews(currentIp, 1);
+
+            _genIndex++;
         }
 
         private async void GenerateButton_Click(object sender, EventArgs e)
@@ -44,17 +88,20 @@ namespace MultiTabWebView
 
             try
             {
-                string startIp = startIpTextBox.Text.Trim();
-                int count = (int)countNumericUpDown.Value;
+                _startIp = startIpTextBox.Text.Trim();
+                _genCount = (int)countNumericUpDown.Value;
 
-                if (!IsValidIpAddress(startIp))
+                if (!IsValidIpAddress(_startIp))
                 {
                     MessageBox.Show("유효한 IP 주소를 입력해주세요.", "오류",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                await GenerateTabsAndWebViews(startIp, count);
+                //await GenerateTabsAndWebViews(startIp, count);
+
+                _genIndex = 0;
+                genTimer.Start(); // 타이머 시작
             }
             catch (Exception ex)
             {
@@ -101,11 +148,11 @@ namespace MultiTabWebView
                 tabControl.TabPages.Add(tabPage);
             }
 
-            // 첫 번째 탭 선택
-            if (tabControl.TabPages.Count > 0)
-            {
-                tabControl.SelectedIndex = 0;
-            }
+            // 마지막 탭 선택
+            //if (tabControl.TabPages.Count > 0)
+            //{
+            //    tabControl.SelectedIndex = tabControl.TabPages.Count - 1;
+            //}
         }
 
         private async Task<List<WebView2>> CreateWebViewsForTab(TabPage tabPage, string ip)
@@ -306,6 +353,9 @@ namespace MultiTabWebView
                                 const signInButton = document.querySelector('.form-actions.right .blue-btn');
                                 if (signInButton) {
                                     signInButton.click();
+                                    setTimeout(function() {
+                                        window.location.href = '/config/Event?menu=LPRInfo';
+                                    }, 1000); // 1초 후 이동
                                 }
                             }
                             }
@@ -313,7 +363,7 @@ namespace MultiTabWebView
 
                         await webView.ExecuteScriptAsync(script);
 
-                        
+                        /*
                         UriBuilder uriBuilder = new UriBuilder(uri);
                         // Change the Path property.
                         uriBuilder.Path = "/config/Event";
@@ -322,6 +372,7 @@ namespace MultiTabWebView
                         Uri newUri = uriBuilder.Uri;
 
                         webView.Navigate(newUri.ToString());
+                        */
                         
                     }
                     else if(absolutePath == "/config/System")
