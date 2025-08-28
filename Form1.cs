@@ -165,7 +165,6 @@ namespace MultiTabWebView
             };
 
             // 뷰 타입에 따라 위치와 크기 설정
-            //SetWebViewLayout(webView, i, webViewCount, tabPage);
             webView.Dock = DockStyle.Fill;
 
             tabPage.Controls.Add(webView);
@@ -175,44 +174,6 @@ namespace MultiTabWebView
             await InitializeWebView(webView, ip, 0);
          
             return webViews;
-        }
-
-        private void SetWebViewLayout(WebView2 webView, int index, int totalCount, TabPage tabPage)
-        {
-            if (totalCount == 1) // 싱글뷰
-            {
-                webView.Dock = DockStyle.Fill;
-            }
-            else if (totalCount == 2) // 더블뷰
-            {
-                webView.Dock = DockStyle.None;
-                webView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-
-                if (index == 0) // 왼쪽
-                {
-                    webView.Location = new Point(0, 0);
-                    webView.Size = new Size(tabPage.Width / 2 - 2, tabPage.Height);
-                }
-                else // 오른쪽
-                {
-                    webView.Location = new Point(tabPage.Width / 2 + 2, 0);
-                    webView.Size = new Size(tabPage.Width / 2 - 2, tabPage.Height);
-                }
-
-                // 탭 페이지 크기 변경 시 WebView 크기도 조정
-                tabPage.SizeChanged += (s, e) =>
-                {
-                    if (index == 0)
-                    {
-                        webView.Size = new Size(tabPage.Width / 2 - 2, tabPage.Height);
-                    }
-                    else
-                    {
-                        webView.Location = new Point(tabPage.Width / 2 + 2, 0);
-                        webView.Size = new Size(tabPage.Width / 2 - 2, tabPage.Height);
-                    }
-                };
-            }
         }
 
         private async Task InitializeWebView(WebView2 webView, string ip, int index)
@@ -272,9 +233,7 @@ namespace MultiTabWebView
 
                 // JavaScript API 추가
                 //webView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
-                //webView21.CoreWebView2.WebResourceRequested += OnWebResourceRequested;
-                // DOM 로딩 완료 이벤트에 핸들러 추가
-                
+                //webView21.CoreWebView2.WebResourceRequested += OnWebResourceRequested;                
             }
         }
 
@@ -292,12 +251,11 @@ namespace MultiTabWebView
 
                     Debug.WriteLine($"[CoreWebView2_DOMContentLoaded] 서브경로: {absolutePath}, org: {tSrc}, Doc: {webView.DocumentTitle}");
 
-                    // 듀얼뷰 초기화면
+                    // 듀얼뷰LPR 초기화면
                     if (absolutePath == "/cgi-bin/luci/")
                     {
                         if (webView.DocumentTitle == "camera - Event - LuCI")
                         {
-                            // 더블뷰
                             string script = @"
                             
                             if (document.body)
@@ -328,10 +286,9 @@ namespace MultiTabWebView
                         }
 
                     }
-                    // 싱글뷰 로그인
+                    // 싱글뷰LPR 로그인
                     else if (absolutePath == "/login")
                     {
-                        // 싱글뷰 로그인
                         string script = @"
                             if (document.body)
                             {
@@ -363,28 +320,6 @@ namespace MultiTabWebView
 
                         await webView.ExecuteScriptAsync(script);
 
-                        /*
-                        UriBuilder uriBuilder = new UriBuilder(uri);
-                        // Change the Path property.
-                        uriBuilder.Path = "/config/Event";
-                        uriBuilder.Query = "menu=LPRInfo";
-                        // Get the new Uri object.
-                        Uri newUri = uriBuilder.Uri;
-
-                        webView.Navigate(newUri.ToString());
-                        */
-                        
-                    }
-                    else if(absolutePath == "/config/System")
-                    {
-                        UriBuilder uriBuilder = new UriBuilder(uri);
-                        // Change the Path property.
-                        uriBuilder.Path = "/config/Event";
-                        uriBuilder.Query = "menu=LPRInfo";
-                        // Get the new Uri object.
-                        Uri newUri = uriBuilder.Uri;
-
-                        webView.Navigate(newUri.ToString());
                     }
 
                 }
@@ -425,7 +360,6 @@ namespace MultiTabWebView
             catch (Exception ex)
             {
                 // 에러 로깅 (필요시)
-                //System.Diagnostics.Debug.WriteLine($"DOMContentLoaded 핸들러 오류: {ex.Message}");
                 MessageBox.Show($"DOMContentLoaded 핸들러 오류: {ex.Message}");
             }
 
@@ -454,46 +388,11 @@ namespace MultiTabWebView
             }
         }
 
-        private void ViewTypeRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-            
-            // 기존 탭들의 WebView 레이아웃 재구성
-            //await ReconfigureExistingTabs();
-        }
-
-        private async Task ReconfigureExistingTabs()
-        {
-            var tabsToReconfigure = new List<TabPage>(tabWebViewMap.Keys);
-
-            foreach (var tabPage in tabsToReconfigure)
-            {
-                var existingWebViews = tabWebViewMap[tabPage];
-
-                // 기존 WebView 제거
-                foreach (var webView in existingWebViews)
-                {
-                    tabPage.Controls.Remove(webView);
-                    webView.Dispose();
-                }
-
-                // IP 추출 (탭 이름에서)
-                string ip = tabPage.Text;
-
-                // 새로운 WebView 생성
-                var newWebViews = await CreateWebViewsForTab(tabPage, ip);
-                tabWebViewMap[tabPage] = newWebViews;
-            }
-
-            // 현재 선택된 탭의 WebView 보이기
-            TabControl_SelectedIndexChanged(null, null);
-        }
-
         private void ClearAllButton_Click(object sender, EventArgs e)
         {
             if (tabControl.TabPages.Count == 0) return;
 
-            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?", "확인",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var result = MessageBox.Show("모든 탭을 삭제하시겠습니까?", "확인", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
             {
@@ -514,20 +413,6 @@ namespace MultiTabWebView
         private bool IsValidIpAddress(string ip)
         {
             return IPAddress.TryParse(ip, out _);
-        }
-
-        private bool IsLocalIpAddress(string ip)
-        {
-            if (!IPAddress.TryParse(ip, out IPAddress address))
-                return false;
-
-            var bytes = address.GetAddressBytes();
-
-            // 로컬 IP 범위 체크
-            return (bytes[0] == 192 && bytes[1] == 168) ||  // 192.168.x.x
-                   (bytes[0] == 10) ||                      // 10.x.x.x
-                   (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) || // 172.16.x.x - 172.31.x.x
-                   (bytes[0] == 127); // 127.x.x.x (localhost)
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
